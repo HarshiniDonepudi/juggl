@@ -5,6 +5,18 @@ import matplotlib.pyplot as plt
 from matplotlib.patches import Circle, Wedge
 import matplotlib.gridspec as gridspec
 
+# Check if coming from onboarding
+def check_onboarding_status():
+    # Check URL parameters first
+    if 'page' in st.query_params and st.query_params.page.lower() == 'insights':
+        return True
+    
+    # Then check session state
+    if 'onboarding_complete' in st.session_state and st.session_state.onboarding_complete:
+        return True
+    
+    return False
+
 # Set page config
 st.set_page_config(page_title="Juggl - Insights", layout="wide", initial_sidebar_state="collapsed")
 
@@ -381,6 +393,27 @@ header {visibility: hidden;}
 # Apply custom CSS
 st.markdown(custom_css, unsafe_allow_html=True)
 
+# Check for and clear navigation parameters
+came_from_onboarding = check_onboarding_status()
+# Clear query parameters by accessing the object directly
+if 'page' in st.query_params:
+    del st.query_params.page
+
+# Also check localStorage for onboarding completion using JS
+st.markdown("""
+<script>
+    // Check if we have onboarding_complete in localStorage
+    const onboardingComplete = localStorage.getItem('onboarding_complete');
+    if (onboardingComplete === 'true') {
+        // Can communicate back to Python via Streamlit's componentValue
+        window.parent.postMessage({
+            type: 'streamlit:setComponentValue',
+            value: true
+        }, '*');
+    }
+</script>
+""", unsafe_allow_html=True)
+
 # Define some example data
 user_name = "Rhea"
 burnout_risk = 65
@@ -396,6 +429,10 @@ optimism_today = 3.2
 optimism_avg = 3.5
 energy_today = 3.4
 energy_avg = 3.5
+
+# Initialize session state for view if not already set
+if 'view' not in st.session_state:
+    st.session_state.view = 1
 
 # Function to create a donut chart for burnout risk
 def create_donut_chart(value, title, subtitle="", size_inches=(3, 3)):
@@ -483,6 +520,12 @@ def create_time_insights_chart():
 # App Layout
 st.markdown('<div class="app-container">', unsafe_allow_html=True)
 
+# Display welcome notification if coming from onboarding
+if came_from_onboarding:
+    st.success("🎉 Welcome to your Insights Dashboard! Onboarding complete!")
+    # Store onboarding completion in session state for this session
+    st.session_state.onboarding_complete = True
+
 # Header with Logo and Check-In button
 st.markdown('''
 <div class="header">
@@ -510,9 +553,6 @@ with col1:
 
 with col2:
     # Main Content - View 1 (Analysis view from Image 1)
-    if 'view' not in st.session_state:
-        st.session_state.view = 1
-    
     if st.session_state.view == 1:
         # Welcome section with personalized greeting
         st.markdown(f'''

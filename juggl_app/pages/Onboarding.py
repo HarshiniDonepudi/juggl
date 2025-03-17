@@ -12,6 +12,10 @@ if 'step' not in st.session_state:
 if 'onboarding_data' not in st.session_state:
     st.session_state.onboarding_data = {}
 
+# Flag to indicate onboarding completion
+if 'onboarding_complete' not in st.session_state:
+    st.session_state.onboarding_complete = False
+
 # Custom CSS to style the app exactly like the image
 custom_css = """
 <style>
@@ -125,21 +129,17 @@ div.stButton > button {
 # Apply custom CSS
 st.markdown(custom_css, unsafe_allow_html=True)
 
-# Define function to go to insights page
-def go_to_insights():
+# Define function to complete onboarding and redirect
+def complete_onboarding():
     # Mark onboarding as complete
     st.session_state.onboarding_complete = True
     
-    # Set Insights as the active page
-    st.session_state.active_page = "Insights"
-    
-    # Redirect to the insights page using query parameters
-    # This is a more reliable way to navigate between pages in Streamlit
-    st.experimental_set_query_params(page="Insights")
-    
-    # Alternative direct link using HTML
+    # Create navigation link to Insights
     st.markdown("""
-    <meta http-equiv="refresh" content="0; URL=Insights">
+    <div style="text-align: center; margin-top: 30px;">
+        <p style="color: #4CAF50; font-weight: bold; font-size: 18px;">Onboarding complete!</p>
+        <a href="/Insights" target="_self" style="display: inline-block; background: #4CAF50; color: white; padding: 10px 30px; border-radius: 30px; text-decoration: none; font-weight: bold; margin-top: 20px;">Go to Insights Dashboard</a>
+    </div>
     """, unsafe_allow_html=True)
 
 # Logo
@@ -167,11 +167,6 @@ step_indicators += "</div>"
 
 # Display step indicators
 st.markdown(step_indicators, unsafe_allow_html=True)
-
-# Check if we need to go to insights page (coming back from final step)
-if st.session_state.get('go_to_insights', False):
-    go_to_insights()
-    st.stop()
 
 # Main card container
 with st.container():
@@ -341,7 +336,7 @@ with st.container():
             'connected': add_calendar
         }
         
-        # Previous and Next buttons
+        # Previous and Finish buttons
         cols1, cols2 = st.columns(2)
         with cols1:
             if st.button("Previous", key="prev_5", use_container_width=True):
@@ -350,34 +345,39 @@ with st.container():
         with cols2:
             # Complete onboarding button
             if st.button("Finish", key="complete", use_container_width=True):
-                # Display success message
-                st.success("Onboarding complete!")
-                st.markdown("""
-                <div class="center-content">
-                    <a href="Insights" style="display: inline-block; background: #4CAF50; color: white; padding: 10px 30px; border-radius: 30px; text-decoration: none; font-weight: bold; margin-top: 20px;">Go to Insights Dashboard</a>
-                </div>
-                """, unsafe_allow_html=True)
-                
-                # Also add a streamlit button as a backup navigation method
-                if st.button("View Your Insights", key="insights_button"):
-                    # Set the flag to redirect on next load
-                    st.session_state.go_to_insights = True
-                    st.experimental_rerun()
+                # Write completion data to session state
+                st.session_state.onboarding_complete = True
+                st.session_state.show_insights_link = True
+                st.experimental_rerun()
+    
+    # Show insights link after completing onboarding
+    if st.session_state.get('show_insights_link', False):
+        st.markdown("""
+        <div style="text-align: center; margin-top: 20px;">
+            <p style="color: #4CAF50; font-weight: bold; font-size: 18px;">Onboarding complete!</p>
+            <p style="margin-bottom: 20px;">You're all set up and ready to start your Juggl journey!</p>
+            <a href="/Insights" target="_self" style="display: inline-block; background: #4CAF50; color: white; padding: 10px 30px; border-radius: 30px; text-decoration: none; font-weight: bold;">Go to Insights Dashboard</a>
+        </div>
+        """, unsafe_allow_html=True)
+        
+        if st.button("Continue to Insights", key="insights_direct_button"):
+            # Create a Streamlit URL parameter to force navigation
+            st.query_params.page = "insights"
+            
+            # Also try JavaScript redirect as fallback
+            st.markdown("""
+            <script>
+                window.location.href = "/Insights";
+            </script>
+            """, unsafe_allow_html=True)
     
     st.markdown('</div>', unsafe_allow_html=True)  # Close card container
 
-# Check if we have pages.py file and create one if needed
-import os
-pages_dir = "pages"
-if not os.path.exists(pages_dir):
-    os.makedirs(pages_dir)
-
-# Check if Insights.py exists in the pages directory
-insights_path = os.path.join(pages_dir, "Insights.py")
-if not os.path.exists(insights_path):
-    # Create a simple placeholder file that will show up in the sidebar
-    with open(insights_path, "w") as f:
-        f.write("""import streamlit as st
-st.title("Insights")
-st.write("The Insights page is being set up.")
-""")
+# Store onboarding completion in a session cookie to persist between pages
+if st.session_state.get('onboarding_complete', False):
+    st.markdown("""
+    <script>
+        // Store completion status in localStorage
+        localStorage.setItem('onboarding_complete', 'true');
+    </script>
+    """, unsafe_allow_html=True)
