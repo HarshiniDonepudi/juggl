@@ -328,7 +328,7 @@ def page_ideal_week():
             marker=dict(colors=donut_colors[:len(cat_values)]),
             textinfo='none'
         )])
-        pct = int((total_used/168)*100)
+        pct = min(100, int((total_used/168)*100))
         fig.add_annotation(dict(
             text=f"{pct}%<br>{total_used} of 168 hours",
             x=0.5, y=0.5, showarrow=False, font_size=16

@@ -12,6 +12,7 @@ st.set_page_config(
 
 custom_css = """
 <style>
+@import url('https://fonts.googleapis.com/css2?family=Albert+Sans:ital,wght@0,100..900;1,100..900&display=swap');
 /* Hide default Streamlit elements */
 #MainMenu, footer, header {
     visibility: hidden;
@@ -19,13 +20,13 @@ custom_css = """
 body {
     margin: 0;
     padding: 0;
-    font-family: 'Nunito Sans', sans-serif;
+    font-family: 'Albert Sans', sans-serif;
     background: var(--Gray---10, #EEF1F1);
     letter-spacing: -0.01em;
 }
 /* Container for everything */
 .block-container {
-    margin-top:-50px;
+    margin-top:-30px;
     margin-left:120px;
     max-width: 1370px;
     padding: 20px;
@@ -206,7 +207,7 @@ st.markdown(custom_css, unsafe_allow_html=True)
 st.markdown("""
 <div class="sidebar">
     <div>
-        <div class="sidebar-logo" style="margin-top:40px">
+        <div class="sidebar-logo" style="margin-top:60px">
 <svg width="60" height="40" viewBox="0 0 118 48" fill="none" xmlns="http://www.w3.org/2000/svg">
   <g id="Group 28">
   <g id="TM">
